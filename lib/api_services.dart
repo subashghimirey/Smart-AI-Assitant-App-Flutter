@@ -23,18 +23,17 @@ class GeminiService {
 
     try {
       final response = await _model.generateContent(content);
-      bool isImagePrompt = containsYesOrNo(response.text!);
-      print(response.text);
-      if (isImagePrompt) {
-        final response = await limeWireAPI(prompt);
-        print("limewire api");
+      bool isImage = containsYesOrNo(response.text!);
+      
+      if (isImage) {
+        final response = await generateImage(prompt);
+        // print("limewire api");
         return response!;
       } else {
         final response = await geminiAPI(prompt);
-        print("text only");
+        
         return response;
       }
-      return "Some internal error occured, please stay tuend";
     }
     // return "An internal error occured";
     catch (err) {
@@ -52,7 +51,10 @@ class GeminiService {
       'prompt': prompt,
     });
 
-    final content = [Content.text(messages.toString())];
+    final content = [
+      Content.text(
+          "${messages.toString()} Provide answer in exact 60 words only, only use english alphabets and numbers while answering.")
+    ];
     // final content = [Content.text(prompt)];
 
     try {
@@ -74,14 +76,16 @@ class GeminiService {
   }
 
   Future<String?> limeWireAPI(String prompt) async {
-    // Replace with your actual LimeWire API key
+   
+
+    const limeWireAPI = limeWireAPIKEY;
 
     final url = Uri.parse('https://api.limewire.com/api/image/generation');
     final headers = {
       "Content-Type": "application/json",
       "X-Api-Version": 'v1',
       "Accept": "application/json",
-      "Authorization": "Bearer $limeWireAPIKEY",
+      "Authorization": "Bearer $limeWireAPI",
     };
     final body = jsonEncode({
       "prompt": prompt,
@@ -91,21 +95,58 @@ class GeminiService {
     try {
       final response = await http.post(url, headers: headers, body: body);
 
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final imageUrl = data['data'][0]['asset_url'];
-        print(data.toString());
-        print(imageUrl);
         return imageUrl;
       } else {
-        print('Error generating image: ${response.statusCode}');
-        print(response.body);
-        return null; // Or throw an appropriate exception
+        
+        switch (response.statusCode) {
+          case 400:
+            throw Exception('Bad request. Check your prompt or request body.');
+          case 401:
+            throw Exception('Unauthorized. Check your API key.');
+          case 429:
+            throw Exception('Rate limit exceeded. Reduce request frequency.');
+          case 500:
+            throw Exception('Internal server error. Try again later.');
+          default:
+            throw Exception('Error generating image: ${response.statusCode}');
+        }
       }
     } catch (err) {
-      print('Error: $err');
-      print(err.toString());
-      return "error occured"; // Or throw an appropriate exception
+      
+      return "error occured"; // 
+    }
+  }
+
+  Future<String?> generateImage(String prompt) async {
+    final url = Uri.parse('http://127.0.0.1:5000/generate-image');
+    final headers = {
+      "Content-Type": "application/json",
+      "X-Api-Version": "v1",
+      "Accept": "application/json",
+      "Authorization": limeWireAPIKEY,
+    };
+    final body = jsonEncode({"prompt": prompt});
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final imageUrl = data['image_url'];
+        // print("Generated Image URL: $imageUrl");
+        return imageUrl;
+      } else {
+        // print('Error generating image: ${response.statusCode}');
+        // print(response.body);
+        return null;
+      }
+    } catch (err) {
+      // print('Error: $err');
+      return null;
     }
   }
 }

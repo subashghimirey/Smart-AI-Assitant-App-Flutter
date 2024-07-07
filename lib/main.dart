@@ -1,4 +1,4 @@
-import 'package:assistant/check.dart';
+
 import 'package:assistant/home_page.dart';
 import 'package:assistant/pallete.dart';
 import 'package:flutter/material.dart';

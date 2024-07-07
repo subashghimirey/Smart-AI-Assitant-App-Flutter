@@ -38,6 +38,8 @@ dependencies:
   speech_to_text: ^6.6.2
   http: ^1.2.1
   google_generative_ai: ^0.4.3
+  flutter_tts: ^4.0.2
+  animate_do: ^3.3.4
 
 dev_dependencies:
   flutter_test:
