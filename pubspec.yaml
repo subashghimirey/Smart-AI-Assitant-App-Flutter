@@ -40,6 +40,7 @@ dependencies:
   google_generative_ai: ^0.4.3
   flutter_tts: ^4.0.2
   animate_do: ^3.3.4
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

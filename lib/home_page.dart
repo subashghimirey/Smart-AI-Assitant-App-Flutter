@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,6 +26,8 @@ class _HomePageState extends State<HomePage> {
   bool _isMicOn = false;
   String? generatedImage;
   String? generatedContent;
+
+  bool isGenerating = false;
 
   int start = 200;
   int delay = 200;
@@ -49,7 +52,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _stopListening() async {
-    // print("stopped");
     await _speechToText.stop();
     setState(() {
       _isMicOn = false;
@@ -123,32 +125,47 @@ class _HomePageState extends State<HomePage> {
 
             FadeInRight(
               child: Visibility(
-                visible: generatedImage == null,
+                visible: generatedImage == null && isGenerating == false,
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 40)
-                      .copyWith(top: 30),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 15),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Pallete.borderColor,
+                    margin: const EdgeInsets.symmetric(horizontal: 40)
+                        .copyWith(top: 30),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 15),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Pallete.borderColor,
+                      ),
+                      borderRadius: BorderRadius.circular(20)
+                          .copyWith(topLeft: Radius.zero),
                     ),
-                    borderRadius: BorderRadius.circular(20)
-                        .copyWith(topLeft: Radius.zero),
-                  ),
-                  child: Text(
-                    generatedContent == null
-                        ? "Good Morning, what task can I do for you?"
-                        : generatedContent!,
-                    style: TextStyle(
-                      fontSize: generatedContent == null ? 28 : 18,
-                      color: Pallete.mainFontColor,
-                      fontFamily: 'Cera Pro',
+                    child: Text(
+                      generatedContent == null
+                          ? "Good Morning, what task can I do for you?"
+                          : generatedContent!,
+                      style: TextStyle(
+                        fontSize: generatedContent == null ? 28 : 18,
+                        color: Pallete.mainFontColor,
+                        fontFamily: 'Cera Pro',
+                      ),
+                    )),
+              ),
+            ),
+
+            if (isGenerating)
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: SizedBox(
+                  width: 400.0,
+                  height: 400.0,
+                  child: Shimmer.fromColors(
+                    baseColor: const Color.fromARGB(255, 47, 48, 47),
+                    highlightColor: Colors.grey,
+                    child: Image.network(
+                      "https://filestore.community.support.microsoft.com/api/images/8f0f43e2-9444-46c1-a88e-9dc1d4d6442f?upload=true",
                     ),
                   ),
                 ),
               ),
-            ),
 
             if (generatedImage != null)
               Padding(
@@ -160,7 +177,9 @@ class _HomePageState extends State<HomePage> {
             //suggestion text
             SlideInLeft(
               child: Visibility(
-                visible: generatedContent == null && generatedImage == null,
+                visible: generatedContent == null &&
+                    generatedImage == null &&
+                    isGenerating == false,
                 child: Container(
                   alignment: Alignment.centerLeft,
                   margin:
@@ -178,7 +197,9 @@ class _HomePageState extends State<HomePage> {
             ),
 
             Visibility(
-              visible: generatedContent == null && generatedImage == null,
+              visible: generatedContent == null &&
+                  generatedImage == null &&
+                  isGenerating == false,
               child: Column(
                 children: [
                   SlideInLeft(
@@ -222,7 +243,16 @@ class _HomePageState extends State<HomePage> {
                 _speechToText.isNotListening) {
               await _startListening();
             } else if (_speechToText.isListening) {
+              setState(() {
+                isGenerating = true;
+              });
               final res = await gemini.isImagePrompt(_lastWords);
+              setState(() {
+                isGenerating = false;
+              });
+              setState(() {
+                isGenerating = false;
+              });
 
               if (res.contains('https')) {
                 generatedImage = res;
@@ -230,6 +260,7 @@ class _HomePageState extends State<HomePage> {
               } else {
                 generatedContent = res;
                 generatedImage = null;
+
                 await systemSpeak(generatedContent!);
               }
 

@@ -18,7 +18,7 @@ class GeminiService {
   Future<String> isImagePrompt(String prompt) async {
     final content = [
       Content.text(
-          "$prompt Does this message want to generate an image, art or picture or something else? Simply answer in yes or no only, no more words? Just say yes or no only.")
+          "$prompt Does this message want to generate an image, art or picture or something else? Only answer yes if the user wants to generate on image, picture art or something else, if user wants to know location, say no. Simply answer in yes or no only, no more words? Just say yes or no only.")
     ];
 
     try {
@@ -53,7 +53,7 @@ class GeminiService {
 
     final content = [
       Content.text(
-          "${messages.toString()} Provide answer in exact 60 words only, only use english alphabets and numbers while answering.")
+          "${messages.toString()} Provide answer in exact 60 words only, only use english alphabets and numbers while answering. Do not use * and emojis.")
     ];
     // final content = [Content.text(prompt)];
 
